@@ -1,51 +1,50 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
+const axios = require("axios");
 
-interface JokeApiResponse {
-  error: boolean;
-  joke?: string;
-}
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Handle CORS preflight
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+// This function is the Vercel serverless function that handles Moveo's webhook requests.
+module.exports = async (req, res) => {
+  // Ensure the request method is POST since Moveo sends POST requests.
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   try {
-    const response = await axios.get<JokeApiResponse>('https://v2.jokeapi.dev/joke/Any?type=single');
+    // Fetch a joke from JokeAPI.
+    // Using the "Any" category and requesting a single-part joke.
+    const response = await axios.get("https://v2.jokeapi.dev/joke/Any?type=single");
 
-    if (response.data.error || !response.data.joke) {
-      throw new Error('Joke API returned no joke');
-    }
+    // Extract the joke text.
+    const joke = response.data.joke;
 
-    return res.json({
-      fulfillment_response: { // ✅ Snake_case for Moveo
-        messages: [{
-          text: {
-            text: [response.data.joke],
-          },
-        }],
-      },
-    });
-  } catch (error: unknown) {
-    console.error('Error:', error);
-    return res.status(500).json({
-      fulfillment_response: {
-        messages: [{
-          text: {
-            text: ["Sorry, I couldn't think of a joke right now. Try again later!"],
-          },
-        }],
-      },
+    // Construct the response in the format Moveo expects.
+    // Moveo's documentation shows that the response should include a fulfillmentResponse with messages.
+    const payload = {
+      fulfillmentResponse: {
+        messages: [
+          {
+            text: {
+              text: [joke]  // Note: this is an array with one message string.
+            }
+          }
+        ]
+      }
+    };
+
+    // Send the response.
+    res.json(payload);
+  } catch (error) {
+    console.error("Error fetching joke:", error);
+
+    // Respond with a fallback message if something goes wrong.
+    res.json({
+      fulfillmentResponse: {
+        messages: [
+          {
+            text: {
+              text: ["Sorry, I couldn't fetch a joke at this time. Please try again later."]
+            }
+          }
+        ]
+      }
     });
   }
-}
+};
