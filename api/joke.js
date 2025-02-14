@@ -1,12 +1,10 @@
-const express = require("express");
 const axios = require("axios");
-const cors = require("cors");
 
-const app = express();
-app.use(express.json());
-app.use(cors());
+module.exports = async (req, res) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
 
-app.post("/api/jokes", async (req, res) => {
   try {
     const response = await axios.get("https://v2.jokeapi.dev/joke/Any?type=single");
     res.json({
@@ -30,6 +28,4 @@ app.post("/api/jokes", async (req, res) => {
       }
     });
   }
-});
-
-module.exports = app;
+};
