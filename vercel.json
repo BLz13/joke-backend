@@ -1,10 +1,6 @@
 {
     "version": 2,
-    "builds": [
-      { "src": "api/jokes.js", "use": "@vercel/node" }
-    ],
-    "routes": [
-      { "src": "/jokes", "dest": "/api/jokes" }
-    ]
+    "builds": [{ "src": "api/jokes.js", "use": "@vercel/node" }],
+    "routes": [{ "src": "/jokes", "dest": "/api/jokes" }]
   }
   
