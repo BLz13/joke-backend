@@ -6,12 +6,15 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // Fetch joke from JokeAPI
     const response = await axios.get("https://v2.jokeapi.dev/joke/Any?type=single");
+
+    // Format response according to Moveo's webhook requirements
     res.json({
       fulfillmentResponse: {
         messages: [{
           text: {
-            text: [response.data.joke]
+            text: [response.data.joke] // Array of strings (even if one message)
           }
         }]
       }
