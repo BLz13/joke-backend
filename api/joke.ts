@@ -22,8 +22,8 @@ export default async function handler(req, res) {
     res.status(200).json({
       responses: [
         {
-          type: 'text',
-          content: [jokeText]
+          "type": "text",
+          "texts": [jokeText]
         }
       ]
     });
