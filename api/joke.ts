@@ -23,7 +23,7 @@ export default async function handler(req, res) {
       responses: [
         {
           type: 'text',
-          content: jokeText
+          content: [jokeText]
         }
       ]
     });
