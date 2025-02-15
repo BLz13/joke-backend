@@ -1,50 +1,43 @@
-const axios = require("axios");
-
-// This function is the Vercel serverless function that handles Moveo's webhook requests.
-module.exports = async (req, res) => {
-  // Ensure the request method is POST since Moveo sends POST requests.
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
-
+export default async function handler(req, res) {
   try {
-    // Fetch a joke from JokeAPI.
-    // Using the "Any" category and requesting a single-part joke.
-    const response = await axios.get("https://v2.jokeapi.dev/joke/Any?type=single");
+    // Fetch from JokeAPI
+    const jokeResponse = await fetch('https://v2.jokeapi.dev/joke/Any');
+    const jokeData = await jokeResponse.json();
 
-    // Extract the joke text.
-    const joke = response.data.joke;
+    // Build the text from the joke
+    let jokeText;
+    if (jokeData.type === 'single') {
+      // Single-liner
+      jokeText = jokeData.joke;
+    } else if (jokeData.type === 'twopart') {
+      // Two-part joke
+      jokeText = `${jokeData.setup}\n${jokeData.delivery}`;
+    } else {
+      // Fallback if the API returns something unexpected
+      jokeText = 'No joke found!';
+    }
 
-    // Construct the response in the format Moveo expects.
-    // Moveo's documentation shows that the response should include a fulfillmentResponse with messages.
-    const payload = {
-      fulfillmentResponse: {
-        messages: [
-          {
-            text: {
-              text: [joke]  // Note: this is an array with one message string.
-            }
-          }
-        ]
-      }
-    };
-
-    // Send the response.
-    res.json(payload);
+    // IMPORTANT: Return the data in the format Moveo expects.
+    // For instance, use "responses" with one text message:
+    res.status(200).json({
+      responses: [
+        {
+          type: 'text',
+          content: jokeText
+        }
+      ]
+    });
   } catch (error) {
-    console.error("Error fetching joke:", error);
+    console.error(error);
 
-    // Respond with a fallback message if something goes wrong.
-    res.json({
-      fulfillmentResponse: {
-        messages: [
-          {
-            text: {
-              text: ["Sorry, I couldn't fetch a joke at this time. Please try again later."]
-            }
-          }
-        ]
-      }
+    // Return a fallback response in Moveo format if something fails
+    res.status(500).json({
+      responses: [
+        {
+          type: 'text',
+          content: 'Oops, something went wrong while fetching the joke!'
+        }
+      ]
     });
   }
-};
+}
