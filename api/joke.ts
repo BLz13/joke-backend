@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   try {
     // Fetch from JokeAPI
-    const jokeResponse = await fetch('https://v2.jokeapi.dev/joke/Any');
+    const jokeResponse = await fetch('https://v2.jokeapi.dev/joke/Any?lang=en');
     const jokeData = await jokeResponse.json();
 
     // Build the text from the joke
